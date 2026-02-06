@@ -1,0 +1,187 @@
+================================================================================
+                    O-RAN RAG EXPERIMENTS - READY TO RUN
+================================================================================
+
+✅ PREPARATION COMPLETE
+
+Your system is now configured to run O-RAN RAG experiments with Qwen3-4B on
+your full O-RAN specifications dataset.
+
+================================================================================
+                            QUICK START (COPY & PASTE)
+================================================================================
+
+1. Navigate to project:
+   cd /home/tungnvt5re/Downloads/kiwi_momo/oran-rag-qwen3/cm/archive/tungnvt5_node3/oran_rag/oran-rag-qwen3
+
+2. Activate environment:
+   source .venv/bin/activate
+
+3. Run everything:
+   ./QUICK_START.sh
+
+   OR with 8 GPUs:
+   GPUS=0,1,2,3,4,5,6,7 ./QUICK_START.sh
+
+   OR manual steps:
+   bash scripts/01_build_corpus.sh
+   bash scripts/02_build_index.sh
+   PYTHONPATH=src python -m oran_rag.eval.run_eval \
+     --config configs/app.yaml \
+     --bench_dir data/benchmarks/oranbench \
+     --splits E,M,H \
+     --gpus 0,1,2,3
+
+4. View results:
+   ./VIEW_RESULTS.sh
+
+================================================================================
+                         WHAT HAS BEEN CONFIGURED
+================================================================================
+
+✅ Model: Qwen/Qwen3-4B-Instruct-2507 (in configs/app.yaml)
+✅ Full O-RAN Specs: Located in data/full_oran_specs/ (100+ PDFs)
+✅ Helper Scripts:
+   - QUICK_START.sh           (Run full pipeline in one command)
+   - VIEW_RESULTS.sh          (Analyze results automatically)
+   - scripts/01_build_corpus.sh (Extract & chunk PDFs)
+   - scripts/02_build_index.sh  (Create indexes)
+
+✅ Documentation:
+   - START_HERE.md            (Quick start guide - READ THIS FIRST)
+   - WORKFLOW.md              (Visual workflow & profiles)
+   - COMMANDS_SUMMARY.md      (All commands reference)
+   - RUN_EXPERIMENTS.md       (Detailed guide)
+
+================================================================================
+                           EXPECTED PERFORMANCE
+================================================================================
+
+Timeline:
+- Setup environment: ~10 minutes (one-time)
+- Prepare data: ~1 minute
+- Build corpus: ~20-30 minutes
+- Build indexes: ~10-20 minutes
+- Evaluation (4 GPU): ~1-2 hours
+- Evaluation (8 GPU): ~30-60 minutes
+  
+TOTAL: ~2-3 hours for complete pipeline
+
+Output:
+- Overall Accuracy: 60-75%
+- Per-split accuracy: Easy 75-85%, Medium 60-75%, Hard 40-60%
+- Average citations: 2.0-3.0 per answer
+
+================================================================================
+                        COMMANDS REFERENCE
+================================================================================
+
+Full Pipeline:
+  ./QUICK_START.sh
+
+Build Corpus:
+  bash scripts/01_build_corpus.sh
+
+Build Indexes:
+  bash scripts/02_build_index.sh
+
+Run Evaluation (4 GPU):
+  PYTHONPATH=src python -m oran_rag.eval.run_eval \
+    --config configs/app.yaml \
+    --bench_dir data/benchmarks/oranbench \
+    --splits E,M,H \
+    --gpus 0,1,2,3
+
+Run Evaluation (8 GPU):
+  PYTHONPATH=src python -m oran_rag.eval.run_eval \
+    --config configs/app.yaml \
+    --bench_dir data/benchmarks/oranbench \
+    --splits E,M,H \
+    --gpus 0,1,2,3,4,5,6,7
+
+View Results:
+  ./VIEW_RESULTS.sh
+
+View Metrics JSON:
+  jq . data/reports/eval_mgpu_*/aggregate.summary.json
+
+View Questions:
+  jq -c '{q: .question, gold, pred: .pred_num, acc}' \
+    data/reports/eval_mgpu_*/*.jsonl | head -20
+
+================================================================================
+                         FILE STRUCTURE
+================================================================================
+
+Project Root:
+├── configs/
+│   ├── app.yaml              ← MAIN CONFIG (model: Qwen3-4B)
+│   └── prompts/
+├── data/
+│   ├── raw_specs/            ← Input PDFs (will be filled)
+│   ├── full_oran_specs/      ← Your O-RAN specs source
+│   ├── intermediate/
+│   │   └── chunks.jsonl      ← Generated chunks
+│   ├── indexes/
+│   │   ├── bm25/             ← BM25 index
+│   │   ├── faiss/            ← Dense embeddings
+│   │   └── docstore.sqlite   ← Chunk database
+│   ├── benchmarks/
+│   │   └── oranbench/        ← Eval questions
+│   └── reports/
+│       └── eval_*/           ← Evaluation results
+├── src/oran_rag/             ← Main code
+├── scripts/
+│   ├── 01_build_corpus.sh
+│   ├── 02_build_index.sh
+│   ├── 03_run_server_local.sh
+│   ├── 04_eval.sh
+│   └── mini_run_eval.py
+├── QUICK_START.sh            ← RUN THIS
+├── VIEW_RESULTS.sh
+├── START_HERE.md             ← READ THIS FIRST
+├── WORKFLOW.md
+├── COMMANDS_SUMMARY.md
+└── RUN_EXPERIMENTS.md
+
+================================================================================
+                        QUICK TROUBLESHOOTING
+================================================================================
+
+GPU not detected?
+  nvidia-smi
+
+CUDA memory error?
+  Edit configs/app.yaml: model.max_new_tokens: 256
+
+Slow corpus building?
+  Edit configs/app.yaml: ingest.max_pages_per_pdf: 500
+
+Process stuck?
+  pkill -f "oran_rag"
+
+Need more help?
+  cat START_HERE.md
+  cat COMMANDS_SUMMARY.md
+
+================================================================================
+                           NEXT STEPS
+================================================================================
+
+1. Read START_HERE.md for quick overview
+2. Run: ./QUICK_START.sh
+3. Wait 2-3 hours
+4. View results: ./VIEW_RESULTS.sh
+5. Analyze metrics in: data/reports/eval_mgpu_*/aggregate.summary.json
+
+================================================================================
+
+Ready to experiment? Run:
+
+  cd /home/tungnvt5re/Downloads/kiwi_momo/oran-rag-qwen3/cm/archive/tungnvt5_node3/oran_rag/oran-rag-qwen3
+  source .venv/bin/activate
+  ./QUICK_START.sh
+
+Good luck! 🚀
+
+================================================================================

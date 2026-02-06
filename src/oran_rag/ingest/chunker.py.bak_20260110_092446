@@ -1,0 +1,156 @@
+from __future__ import annotations
+import re
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
+
+from .pdf_to_sections import Heading
+
+@dataclass
+class Chunk:
+    chunk_id: str
+    doc_id: str
+    version: str
+    wg: str
+    clause_id: str
+    section_path: str
+    title: str
+    text: str
+    page_start: int
+    page_end: int
+    is_definition: bool
+    is_normative: bool
+
+def normalize_text(s: str) -> str:
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
+
+def make_chunk_id(doc_id: str, clause_id: str, idx: int) -> str:
+    return f"{doc_id}::{clause_id}::{idx:04d}"
+
+def build_chunks_from_lines(
+    doc_id: str,
+    version: str,
+    wg: str,
+    lines: List[Tuple[int, str]],
+    headings: List[Heading],
+    min_chars: int,
+    max_chars: int,
+    is_definition_fn,
+    is_normative_fn,
+) -> List[Chunk]:
+
+    # Map heading occurrences to line indices
+    heading_recs: List[Tuple[int, Heading]] = []
+    h_iter = iter(headings)
+    # We re-detect headings by scanning again for exact "number title" lines
+    heading_map = {(h.page_num, h.number, h.title.lower()): h for h in headings}
+    for i, (p, ln) in enumerate(lines):
+        # approximate match: line starts with heading number
+        for h in headings:
+            if p == h.page_num and ln.strip().startswith(h.number):
+                heading_recs.append((i, h))
+                break
+    heading_recs.sort(key=lambda x: x[0])
+
+    def find_heading(i: int) -> Optional[Heading]:
+        last = None
+        for idx, h in heading_recs:
+            if idx > i:
+                break
+            last = h
+        return last
+
+    # group lines by heading -> paragraphs
+    grouped: List[Dict] = []
+    cur = None
+    for i, (p, ln) in enumerate(lines):
+        h = find_heading(i)
+        clause_id = h.number if h else "UNKNOWN"
+        title = h.title if h else "UNKNOWN"
+        section_path = f"{clause_id} {title}".strip()
+
+        if cur is None or cur["clause_id"] != clause_id:
+            if cur is not None:
+                grouped.append(cur)
+            cur = {
+                "clause_id": clause_id,
+                "title": title,
+                "section_path": section_path,
+                "page_start": p,
+                "page_end": p,
+                "text_lines": [ln],
+            }
+        else:
+            cur["text_lines"].append(ln)
+            cur["page_end"] = p
+    if cur is not None:
+        grouped.append(cur)
+
+    # Convert grouped blocks into size-controlled chunks
+    chunks: List[Chunk] = []
+    for block in grouped:
+        raw = "".join(block["text_lines"])
+        raw = normalize_text(raw)
+        if not raw:
+            continue
+
+        # split big blocks into pieces around sentence-ish boundaries
+        pieces: List[str] = []
+        if len(raw) <= max_chars:
+            pieces = [raw]
+        else:
+            # split by ". " or "; " conservatively
+            parts = re.split(r"(?<=[\.\;\:])\s+", raw)
+            buf = ""
+            for part in parts:
+                if not part:
+                    continue
+                if len(buf) + 1 + len(part) <= max_chars:
+                    buf = (buf + " " + part).strip()
+                else:
+                    if buf:
+                        pieces.append(buf)
+                    buf = part.strip()
+            if buf:
+                pieces.append(buf)
+
+        # merge too-small pieces
+        merged: List[str] = []
+        buf = ""
+        for piece in pieces:
+            if not buf:
+                buf = piece
+                continue
+            if len(buf) < min_chars:
+                buf = (buf + " " + piece).strip()
+            else:
+                merged.append(buf)
+                buf = piece
+        if buf:
+            merged.append(buf)
+
+        # finalize
+        for j, txt in enumerate(merged):
+            title = block["title"]
+            clause_id = block["clause_id"]
+            section_path = block["section_path"]
+            pages = (block["page_start"], block["page_end"])
+            is_def = bool(is_definition_fn(title, txt))
+            is_norm = bool(is_normative_fn(txt))
+            chunks.append(
+                Chunk(
+                    chunk_id=make_chunk_id(doc_id, clause_id, j),
+                    doc_id=doc_id,
+                    version=version,
+                    wg=wg,
+                    clause_id=clause_id,
+                    section_path=section_path,
+                    title=title,
+                    text=txt,
+                    page_start=pages[0],
+                    page_end=pages[1],
+                    is_definition=is_def,
+                    is_normative=is_norm,
+                )
+            )
+    return chunks

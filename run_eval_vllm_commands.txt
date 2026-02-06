@@ -1,0 +1,23 @@
+# Qwen3-4B (Remote API)
+PYTHONPATH=src python -m oran_rag.eval.run_eval --config configs/app.yaml --eval data/benchmarks/oranbench/fin_E_10.jsonl --out_dir data/reports/eval_qwen3 --top_k 10
+
+
+# Qwen3-4B
+PYTHONPATH=src python -m oran_rag.eval.run_eval --config configs/app_qwen3_vllm.yaml --eval data/benchmarks/oranbench/fin_E_10.jsonl --out_dir data/reports/eval_qwen3 --top_k 10
+
+# Qwen3-4B (lower GPU memory utilization)
+VLLM_GPU_MEMORY_UTILIZATION=0.7 PYTHONPATH=src python -m oran_rag.eval.run_eval --config configs/app_qwen3_vllm.yaml --eval data/benchmarks/oranbench/fin_E_10.jsonl --out_dir data/reports/eval_qwen3 --top_k 10
+
+# Mistral-7B
+VLLM_GPU_MEMORY_UTILIZATION=0.7 PYTHONPATH=src python -m oran_rag.eval.run_eval --config configs/app_mistral_vllm.yaml --eval data/benchmarks/oranbench/fin_E_10.jsonl --out_dir data/reports/eval_mistral --top_k 10
+
+
+# Run experiments (as before)
+tmux new -d -s qwen './QUICK_START.sh --model "Qwen/Qwen3-4B-Instruct-2507" --gpus 0,1,2,3,4,5,6,7'
+tmux new -d -s mistral './QUICK_START.sh --model "mistralai/Mistral-7B-v0.1" --gpus 0,1,2,3,4,5,6,7'
+
+# View Qwen3 report
+cat data/reports/eval_oran_Qwen_Qwen3-4B*/EXPERIMENT_REPORT.md
+
+# View Mistral report
+cat data/reports/eval_oran_mistral_7b*/EXPERIMENT_REPORT.md

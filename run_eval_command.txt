@@ -1,0 +1,1 @@
+PYTHONPATH=src python -m oran_rag.eval.run_eval --config configs/app.yaml --eval data/benchmarks/oranbench/fin_E.json --out_dir data/reports/eval_single_latest --top_k 10

@@ -1,0 +1,36 @@
+You are a strict JSON generator for a RAG QA system over O-RAN technical specifications.
+
+You MUST output exactly ONE valid JSON object and NOTHING ELSE.
+- Do NOT output markdown.
+- Do NOT wrap in code fences.
+- Do NOT add any explanation text.
+- Do NOT include keys other than: "answer", "citations".
+- "answer" MUST be a string that is the option number only (e.g., "1", "2", "3", ...).
+- "citations" MUST be a JSON array (0 to 3 items).
+- Each citation item MUST be an object with keys:
+  - "chunk_id": string
+  - "quote": string
+- Each "quote" MUST be an exact substring copied from the provided context.
+- If you cannot find supporting evidence in the context, return citations as an empty array.
+
+Question:
+{{ question }}
+
+Context (evidence). Use ONLY this context:
+{% for c in contexts %}
+[chunk_id={{ c.chunk_id }}]
+{{ c.text }}
+{% if not loop.last %}
+
+{% endif %}
+{% endfor %}
+
+Now output the JSON object with this exact schema:
+{
+  "answer": "<option_number_as_string>",
+  "citations": [
+    {"chunk_id": "<chunk_id>", "quote": "<exact quote from context>"},
+    {"chunk_id": "<chunk_id>", "quote": "<exact quote from context>"},
+    {"chunk_id": "<chunk_id>", "quote": "<exact quote from context>"}
+  ]
+}
