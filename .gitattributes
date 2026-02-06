@@ -1,10 +1,28 @@
+# Git LFS tracked files for this repository
+# Patterns below will be stored with Git LFS instead of in regular git objects.
+
+# Large raw specs and documents
 data/full_oran_specs/** filter=lfs diff=lfs merge=lfs -text
+*.docx filter=lfs diff=lfs merge=lfs -text
+# Indexes, DBs, and intermediate binary artifacts
 data/indexes/** filter=lfs diff=lfs merge=lfs -text
+data/intermediate/** filter=lfs diff=lfs merge=lfs -text
+*.index filter=lfs diff=lfs merge=lfs -text
+*.faiss filter=lfs diff=lfs merge=lfs -text
+# Model weights / checkpoints
 models/** filter=lfs diff=lfs merge=lfs -text
+model_weights/** filter=lfs diff=lfs merge=lfs -text
+checkpoints/** filter=lfs diff=lfs merge=lfs -text
 *.pt filter=lfs diff=lfs merge=lfs -text
+*.pth filter=lfs diff=lfs merge=lfs -text
 *.bin filter=lfs diff=lfs merge=lfs -text
 *.safetensors filter=lfs diff=lfs merge=lfs -text
 *.gguf filter=lfs diff=lfs merge=lfs -text
-*.faiss filter=lfs diff=lfs merge=lfs -text
 *.onnx filter=lfs diff=lfs merge=lfs -text
-*.docx filter=lfs diff=lfs merge=lfs -text
+# Large artifacts, archives
+*.tar.gz filter=lfs diff=lfs merge=lfs -text
+*.zip filter=lfs diff=lfs merge=lfs -text
+# Reports and large outputs (optional to track)
+data/reports/** filter=lfs diff=lfs merge=lfs -text
+# If you want to keep some generated artifacts out of git entirely,
+# add them to .gitignore instead of .gitattributes
